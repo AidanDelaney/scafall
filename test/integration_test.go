@@ -49,7 +49,8 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 				outputDir, _ = ioutil.TempDir("", "test")
 				prompts := fmt.Sprintf("%s\n", strings.Join(currentCase.promptAnswers, "\n"))
 				mrc = ClosingBuffer{
-					bytes.NewBufferString(prompts)}
+					bytes.NewBufferString(prompts),
+				}
 			})
 
 			it("creates a template file", func() {
@@ -111,5 +112,38 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 
 	when("An invalid template is passed", func() {
 
+	})
+
+	when("A collection is requested", func() {
+		it("Allows a choice to be made", func() {
+			prompts := "\n"
+			mrc := ClosingBuffer{
+				bytes.NewBufferString(prompts),
+			}
+			pwd, _ := os.Getwd()
+			collection := map[string]string{
+				"one": filepath.Join(pwd, "testdata/requireprompts"),
+				"two": filepath.Join(pwd, "testdata/requireprompts"),
+			}
+			s := scafall.Scafall{
+				Variables: map[string]interface{}{},
+				Reserved:  []string{},
+				Stdin:     mrc,
+			}
+
+			outputDir, _ := ioutil.TempDir("", "test")
+			os.Chdir(outputDir)
+			outputProject := filepath.Join(outputDir, "test")
+			err := s.ScaffoldCollection(collection, "Choose your option", outputProject)
+			h.AssertNil(t, err)
+
+			templateFile := filepath.Join(outputProject, "template.go")
+			_, err = os.Stat(templateFile)
+			h.AssertNil(t, err)
+			data, _ := ioutil.ReadFile(templateFile)
+
+			h.AssertContains(t, string(data), "test")
+			os.Chdir(pwd)
+		})
 	})
 }

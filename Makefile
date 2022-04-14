@@ -22,7 +22,7 @@ $(GO_ACC):
 
 test-unit: $(GO_ACC)
 	@echo "	running unit tests"
-	go-acc ./... -o $(CODE_COVERAGE_FILE_TXT)
+	go-acc ./pkg/... -o $(CODE_COVERAGE_FILE_TXT)
 
 test-integration:
 	go clean -testcache ./test/

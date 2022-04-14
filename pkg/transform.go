@@ -20,17 +20,18 @@ import (
 )
 
 const (
-	PromptFile string = "prompts.toml"
+	PromptFile   string = "prompts.toml"
+	OverrideFile string = ".override.toml"
 )
 
 var (
 	ReservedPromptVariables = []string{}
-	IgnoredNames            = []string{"/" + PromptFile, "/.git"}
+	IgnoredNames            = []string{"/" + PromptFile, "/" + OverrideFile, "/.git"}
 )
 
 type Prompt struct {
-	Name     string   `toml:"name,required"`
-	Prompt   string   `toml:"prompt,required"`
+	Name     string   `toml:"name" binding:"required"`
+	Prompt   string   `toml:"prompt" binding:"required"`
 	Required bool     `toml:"required"`
 	Default  string   `toml:"default"`
 	Choices  []string `toml:"choices,omitempty"`
@@ -51,12 +52,16 @@ func requireId(s string) error {
 	return nil
 }
 
-func askPrompts(stdin io.ReadCloser, prompts *Prompts, vars map[string]interface{}) error {
+func askPrompts(stdin io.ReadCloser, prompts *Prompts, vars map[string]interface{}, overides map[string]string) error {
 	for _, prompt := range prompts.Prompts {
+		if overide, exists := overides[prompt.Name]; exists {
+			vars[prompt.Name] = overide
+		}
+
 		var result string
 		var err error
 
-		if prompt.Choices == nil {
+		if prompt.Choices == nil || len(prompt.Choices) == 0 {
 			var validateFunc promptui.ValidateFunc = requireId
 			if prompt.Required {
 				validateFunc = requireNonEmptyString
@@ -65,15 +70,13 @@ func askPrompts(stdin io.ReadCloser, prompts *Prompts, vars map[string]interface
 				Label:    prompt.Prompt,
 				Default:  prompt.Default,
 				Validate: validateFunc,
-
-				Stdin: stdin,
+				Stdin:    stdin,
 			}
 			result, err = p.Run()
 		} else {
 			p := promptui.Select{
 				Label: prompt.Prompt,
 				Items: prompt.Choices,
-
 				Stdin: stdin,
 			}
 			_, result, err = p.Run()
@@ -109,23 +112,44 @@ func contains(strings []string, element string) bool {
 }
 
 func readPromptFile(bfs billy.Filesystem, name string) (*Prompts, error) {
-	promptData, err := readFile(bfs, PromptFile)
+	promptData, err := readFile(bfs, name)
 	if err != nil {
 		return nil, err
 	}
 
 	prompts := Prompts{}
 	if _, err := toml.Decode(promptData, &prompts); err != nil {
-		return nil, fmt.Errorf("%s file does not match required format: %s", PromptFile, err)
+		return nil, fmt.Errorf("%s file does not match required format: %s", name, err)
 	}
 
 	for _, prompt := range prompts.Prompts {
 		if contains(ReservedPromptVariables, prompt.Name) {
-			return nil, fmt.Errorf("%s file contains reserved variable: %s", PromptFile, prompt.Name)
+			return nil, fmt.Errorf("%s file contains reserved variable: %s", name, prompt.Name)
 		}
 	}
 
 	return &prompts, nil
+}
+
+func readOverrides(bfs billy.Filesystem, name string) (map[string]string, error) {
+	overrides := map[string]string{}
+
+	overrideData, err := readFile(bfs, name)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := toml.Decode(overrideData, &overrides); err != nil {
+		return nil, fmt.Errorf("%s file does not match required format: %s", name, err)
+	}
+
+	for k, _ := range overrides {
+		if contains(ReservedPromptVariables, k) {
+			return nil, fmt.Errorf("%s file contains reserved variable: %s", name, k)
+		}
+	}
+
+	return overrides, nil
 }
 
 func isPrefixOf(path string, prefixes []string) bool {
@@ -238,7 +262,14 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 		if err != nil {
 			return err
 		}
-		err = askPrompts(s.Stdin, prompts, s.Variables)
+		overides := map[string]string{}
+		if _, err := bfs.Stat(OverrideFile); err == nil {
+			overides, err = readOverrides(bfs, OverrideFile)
+			if err != nil {
+				return err
+			}
+		}
+		err = askPrompts(s.Stdin, prompts, s.Variables, overides)
 		if err != nil {
 			return err
 		}

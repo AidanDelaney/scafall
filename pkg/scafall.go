@@ -14,8 +14,7 @@ import (
 type Scafall struct {
 	Variables map[string]interface{}
 	Reserved  []string
-
-	Stdin io.ReadCloser
+	Stdin     io.ReadCloser
 }
 
 func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
@@ -24,6 +23,28 @@ func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
 		Reserved:  reservedPromptValues,
 		Stdin:     os.Stdin,
 	}
+}
+
+func (s Scafall) ScaffoldCollection(urls map[string]string, prompt string, outputDir string) error {
+	varName := "__ScaffoldUrl"
+	vars := map[string]interface{}{}
+	choices := make([]string, 0, len(urls))
+	for k := range urls {
+		choices = append(choices, k)
+	}
+
+	initialPrompt := Prompt{
+		Name:     varName,
+		Prompt:   prompt,
+		Required: true,
+		Choices:  choices,
+	}
+	prompts := Prompts{
+		Prompts: []Prompt{initialPrompt},
+	}
+	askPrompts(s.Stdin, &prompts, vars, map[string]string{})
+	url := vars[varName].(string)
+	return s.Scaffold(urls[url], outputDir)
 }
 
 func (s Scafall) Scaffold(url string, outputDir string) error {
