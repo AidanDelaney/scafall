@@ -1,7 +1,6 @@
 package scafall
 
 import (
-	"io"
 	"os"
 
 	"github.com/go-git/go-billy/v5"
@@ -14,14 +13,12 @@ import (
 type Scafall struct {
 	Variables map[string]interface{}
 	Reserved  []string
-	Stdin     io.ReadCloser
 }
 
 func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
 	return Scafall{
 		Variables: vars,
 		Reserved:  reservedPromptValues,
-		Stdin:     os.Stdin,
 	}
 }
 
@@ -74,7 +71,12 @@ func (s Scafall) ScaffoldCollection(url, prompt string, outputDir string) error 
 	prompts := Prompts{
 		Prompts: []Prompt{initialPrompt},
 	}
-	askPrompts(s.Stdin, &prompts, vars, map[string]string{})
+	overrides, err := readOverrides(inFs, OverrideFile)
+	if err != nil {
+		return err
+	}
+
+	askPrompts(&prompts, vars, overrides)
 	choice := vars[varName].(string)
 	inFs, err = inFs.Chroot(choice)
 	if err != nil {

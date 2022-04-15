@@ -52,9 +52,9 @@ func requireId(s string) error {
 	return nil
 }
 
-func askPrompts(stdin io.ReadCloser, prompts *Prompts, vars map[string]interface{}, overides map[string]string) error {
+func askPrompts(prompts *Prompts, vars map[string]interface{}, overrides map[string]string) error {
 	for _, prompt := range prompts.Prompts {
-		if overide, exists := overides[prompt.Name]; exists {
+		if overide, exists := overrides[prompt.Name]; exists {
 			vars[prompt.Name] = overide
 		}
 
@@ -70,14 +70,12 @@ func askPrompts(stdin io.ReadCloser, prompts *Prompts, vars map[string]interface
 				Label:    prompt.Prompt,
 				Default:  prompt.Default,
 				Validate: validateFunc,
-				Stdin:    stdin,
 			}
 			result, err = p.Run()
 		} else {
 			p := promptui.Select{
 				Label: prompt.Prompt,
 				Items: prompt.Choices,
-				Stdin: stdin,
 			}
 			_, result, err = p.Run()
 		}
@@ -133,6 +131,10 @@ func readPromptFile(bfs billy.Filesystem, name string) (*Prompts, error) {
 
 func readOverrides(bfs billy.Filesystem, name string) (map[string]string, error) {
 	overrides := map[string]string{}
+	// if no override file
+	if _, err := bfs.Stat(name); err != nil {
+		return overrides, nil
+	}
 
 	overrideData, err := readFile(bfs, name)
 	if err != nil {
@@ -269,7 +271,7 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 				return err
 			}
 		}
-		err = askPrompts(s.Stdin, prompts, s.Variables, overides)
+		err = askPrompts(prompts, s.Variables, overides)
 		if err != nil {
 			return err
 		}
