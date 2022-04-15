@@ -121,10 +121,7 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 				bytes.NewBufferString(prompts),
 			}
 			pwd, _ := os.Getwd()
-			collection := map[string]string{
-				"one": filepath.Join(pwd, "testdata/requireprompts"),
-				"two": filepath.Join(pwd, "testdata/requireprompts"),
-			}
+			collection := filepath.Join(pwd, "testdata/collection")
 			s := scafall.Scafall{
 				Variables: map[string]interface{}{},
 				Reserved:  []string{},

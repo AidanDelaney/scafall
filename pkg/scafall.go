@@ -25,29 +25,7 @@ func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
 	}
 }
 
-func (s Scafall) ScaffoldCollection(urls map[string]string, prompt string, outputDir string) error {
-	varName := "__ScaffoldUrl"
-	vars := map[string]interface{}{}
-	choices := make([]string, 0, len(urls))
-	for k := range urls {
-		choices = append(choices, k)
-	}
-
-	initialPrompt := Prompt{
-		Name:     varName,
-		Prompt:   prompt,
-		Required: true,
-		Choices:  choices,
-	}
-	prompts := Prompts{
-		Prompts: []Prompt{initialPrompt},
-	}
-	askPrompts(s.Stdin, &prompts, vars, map[string]string{})
-	url := vars[varName].(string)
-	return s.Scaffold(urls[url], outputDir)
-}
-
-func (s Scafall) Scaffold(url string, outputDir string) error {
+func urlToFs(url string) (billy.Filesystem, error) {
 	var inFs billy.Filesystem
 
 	// if the URL is a local folder, then do not git clone it
@@ -60,9 +38,55 @@ func (s Scafall) Scaffold(url string, outputDir string) error {
 			Depth: 1,
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
+	return inFs, nil
+}
+
+func (s Scafall) ScaffoldCollection(url, prompt string, outputDir string) error {
+	varName := "__ScaffoldUrl"
+	inFs, err := urlToFs(url)
+	if err != nil {
+		return err
+	}
+	vars := map[string]interface{}{}
+
+	choices := []string{}
+	entries, err := inFs.ReadDir("/")
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			choices = append(choices, entry.Name())
+		}
+	}
+
+	initialPrompt := Prompt{
+		Name:     varName,
+		Prompt:   prompt,
+		Required: true,
+		Choices:  choices,
+	}
+	prompts := Prompts{
+		Prompts: []Prompt{initialPrompt},
+	}
+	askPrompts(s.Stdin, &prompts, vars, map[string]string{})
+	choice := vars[varName].(string)
+	inFs, err = inFs.Chroot(choice)
+	if err != nil {
+		return nil
+	}
+	return create(s, inFs, outputDir)
+}
+
+func (s Scafall) Scaffold(url string, outputDir string) error {
+	inFs, err := urlToFs(url)
+	if err != nil {
+		return err
+	}
 	return create(s, inFs, outputDir)
 }
