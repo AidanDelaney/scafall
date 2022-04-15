@@ -1,6 +1,7 @@
 package scafall
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-git/go-billy/v5"
@@ -77,6 +78,9 @@ func (s Scafall) ScaffoldCollection(url, prompt string, outputDir string) error 
 	}
 
 	askPrompts(&prompts, vars, overrides)
+	if _, exists := vars[varName]; !exists {
+		return fmt.Errorf("can not process the chosen element of collection: '%s'", varName)
+	}
 	choice := vars[varName].(string)
 	inFs, err = inFs.Chroot(choice)
 	if err != nil {
