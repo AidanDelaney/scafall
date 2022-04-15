@@ -75,7 +75,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 
 		it("renames a templated folder and file", func() {
 			pwd, _ := os.Getwd()
-			os.Chdir(outputDir)
 			outputProject := filepath.Join(outputDir, "test")
 
 			s := scafall.New(map[string]interface{}{"duck": "quack"}, []string{})
@@ -86,8 +85,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			h.AssertNil(t, err)
 			data, _ := ioutil.ReadFile(templateFile)
 			h.AssertContains(t, string(data), "QUACK")
-
-			os.Chdir(pwd)
 		})
 
 		it.After(func() {
@@ -109,7 +106,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			}
 
 			outputDir, _ := ioutil.TempDir("", "test")
-			os.Chdir(outputDir)
 			outputProject := filepath.Join(outputDir, "test")
 			err := s.ScaffoldCollection(collection, "Choose your option", outputProject)
 			h.AssertNil(t, err)
@@ -120,7 +116,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			data, _ := ioutil.ReadFile(templateFile)
 
 			h.AssertContains(t, string(data), "test")
-			os.Chdir(pwd)
 		})
 	})
 }

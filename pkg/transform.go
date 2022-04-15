@@ -56,6 +56,7 @@ func askPrompts(prompts *Prompts, vars map[string]interface{}, overrides map[str
 	for _, prompt := range prompts.Prompts {
 		if overide, exists := overrides[prompt.Name]; exists {
 			vars[prompt.Name] = overide
+			continue
 		}
 
 		var result string
