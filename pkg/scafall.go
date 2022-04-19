@@ -3,6 +3,7 @@ package scafall
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
@@ -43,12 +44,32 @@ func urlToFs(url string) (billy.Filesystem, error) {
 	return inFs, nil
 }
 
-func (s Scafall) ScaffoldCollection(url, prompt string, outputDir string) error {
-	varName := "__ScaffoldUrl"
-	inFs, err := urlToFs(url)
-	if err != nil {
-		return err
+// If there is no top level prompts and some subdirectories contain prompts,
+// then we're dealing with a collection.  Otherwise it's scaffolding with no
+// prompts
+func isCollection(bfs billy.Filesystem) bool {
+	if _, err := bfs.Stat(PromptFile); err == nil {
+		return false
 	}
+
+	entries, err := bfs.ReadDir("/")
+	if err != nil {
+		return false
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			promptFile := filepath.Join(entry.Name(), PromptFile)
+			if _, err := bfs.Stat(promptFile); err == nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt string) error {
+	varName := "__ScaffoldUrl"
 	vars := map[string]interface{}{}
 
 	choices := []string{}
@@ -89,10 +110,22 @@ func (s Scafall) ScaffoldCollection(url, prompt string, outputDir string) error 
 	return create(s, inFs, outputDir)
 }
 
+func (s Scafall) ScaffoldCollection(url string, prompt string, outputDir string) error {
+	inFs, err := urlToFs(url)
+	if err != nil {
+		return err
+	}
+	return collection(s, inFs, outputDir, prompt)
+}
+
 func (s Scafall) Scaffold(url string, outputDir string) error {
 	inFs, err := urlToFs(url)
 	if err != nil {
 		return err
+	}
+
+	if isCollection(inFs) {
+		return collection(s, inFs, outputDir, "Choose a project template")
 	}
 	return create(s, inFs, outputDir)
 }
