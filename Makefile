@@ -17,7 +17,7 @@ test-clean:
 
 $(GO_ACC):
 	@echo "	installing testing tools"
-	go-acc -h || go install -v github.com/ory/go-acc@latest
+	which go-acc || go install -v github.com/ory/go-acc@latest
 	$(eval export PATH=$(GO_ACC):$(PATH))
 
 test-unit: $(GO_ACC) test-clean

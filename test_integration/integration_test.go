@@ -46,7 +46,8 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 				}
 
 				s := scafall.Scafall{Variables: currentCase.vars, Reserved: []string{}}
-				s.Scaffold(inputTemplate, outputProject)
+				sErr := s.Scaffold(inputTemplate, outputProject)
+				h.AssertNil(t, sErr)
 
 				templateFile := filepath.Join(outputProject, "template.go")
 				_, err := os.Stat(templateFile)

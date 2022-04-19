@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	internal "github.com/AidanDelaney/scafall/pkg/internal"
+
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
@@ -48,7 +50,7 @@ func urlToFs(url string) (billy.Filesystem, error) {
 // then we're dealing with a collection.  Otherwise it's scaffolding with no
 // prompts
 func isCollection(bfs billy.Filesystem) bool {
-	if _, err := bfs.Stat(PromptFile); err == nil {
+	if _, err := bfs.Stat(internal.PromptFile); err == nil {
 		return false
 	}
 
@@ -59,7 +61,7 @@ func isCollection(bfs billy.Filesystem) bool {
 
 	for _, entry := range entries {
 		if entry.IsDir() {
-			promptFile := filepath.Join(entry.Name(), PromptFile)
+			promptFile := filepath.Join(entry.Name(), internal.PromptFile)
 			if _, err := bfs.Stat(promptFile); err == nil {
 				return true
 			}
@@ -84,21 +86,21 @@ func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt strin
 		}
 	}
 
-	initialPrompt := Prompt{
+	initialPrompt := internal.Prompt{
 		Name:     varName,
 		Prompt:   prompt,
 		Required: true,
 		Choices:  choices,
 	}
-	prompts := Prompts{
-		Prompts: []Prompt{initialPrompt},
+	prompts := internal.Prompts{
+		Prompts: []internal.Prompt{initialPrompt},
 	}
-	overrides, err := readOverrides(inFs, OverrideFile)
+	overrides, err := internal.ReadOverrides(inFs, internal.OverrideFile)
 	if err != nil {
 		return err
 	}
 
-	askPrompts(&prompts, vars, overrides)
+	internal.AskPrompts(&prompts, vars, overrides)
 	if _, exists := vars[varName]; !exists {
 		return fmt.Errorf("can not process the chosen element of collection: '%s'", varName)
 	}
@@ -128,4 +130,45 @@ func (s Scafall) Scaffold(url string, outputDir string) error {
 		return collection(s, inFs, outputDir, "Choose a project template")
 	}
 	return create(s, inFs, outputDir)
+}
+
+func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
+	// don't clobber any existing files
+	if _, ok := os.Stat(targetDir); ok == nil {
+		return fmt.Errorf("directory %s already exists", targetDir)
+	}
+
+	var transformedFs = bfs
+
+	if _, err := bfs.Stat(internal.PromptFile); err == nil {
+		prompts, err := internal.ReadPromptFile(bfs, internal.PromptFile)
+		if err != nil {
+			return err
+		}
+		overides := map[string]string{}
+		if _, err := bfs.Stat(internal.OverrideFile); err == nil {
+			overides, err = internal.ReadOverrides(bfs, internal.OverrideFile)
+			if err != nil {
+				return err
+			}
+		}
+		err = internal.AskPrompts(prompts, s.Variables, overides)
+		if err != nil {
+			return err
+		}
+	}
+
+	transformedFs, err := internal.Apply(bfs, s.Variables)
+	if err != nil {
+		return err
+	}
+
+	os.MkdirAll(targetDir, 0755)
+	outFs := osfs.New(targetDir)
+	err = internal.Copy(transformedFs, outFs)
+	if err != nil {
+		return fmt.Errorf("failed to load new project skeleton: %s", err)
+	}
+
+	return nil
 }

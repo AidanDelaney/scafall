@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	scafall "github.com/AidanDelaney/scafall/pkg"
+	util "github.com/AidanDelaney/scafall/pkg/util"
 	h "github.com/buildpacks/pack/testhelpers"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
@@ -42,7 +43,7 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 			h.AssertNil(t, err)
 
 			bfs := osfs.New(outputDir)
-			scafall.Walk(expected, "/", func(path string, info fs.FileInfo, err error) error {
+			util.Walk(expected, "/", func(path string, info fs.FileInfo, err error) error {
 				fi, e := bfs.Stat(path)
 				h.AssertNil(t, e)
 
