@@ -47,7 +47,7 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 				fi, e := bfs.Stat(path)
 				h.AssertNil(t, e)
 
-				h.AssertEq(t, fi.Mode(), info.Mode())
+				h.AssertEq(t, fi.Mode()&01000, info.Mode()&01000)
 				return nil
 			})
 

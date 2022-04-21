@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	internal "github.com/AidanDelaney/scafall/pkg/internal"
+	"github.com/AidanDelaney/scafall/pkg/internal"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"

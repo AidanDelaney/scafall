@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	util "github.com/AidanDelaney/scafall/pkg/util"
+	"github.com/AidanDelaney/scafall/pkg/util"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
