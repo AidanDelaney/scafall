@@ -53,10 +53,50 @@ func requireId(s string) error {
 	return nil
 }
 
-func AskPrompts(prompts *Prompts, vars map[string]interface{}, overrides map[string]string) error {
+func PreparePrompt(prompt *Prompt, defaults map[string]interface{}, input io.ReadCloser) (*promptui.Prompt, error) {
+	var validateFunc promptui.ValidateFunc = requireId
+	var defaultValue = prompt.Default
+	if k, exists := defaults[prompt.Name]; exists {
+		var ok bool
+		defaultValue, ok = k.(string)
+		if !ok {
+			return nil, fmt.Errorf("prompt for %s contains invalid string %v", prompt.Name, prompt.Default)
+		}
+	}
+	if prompt.Required {
+		validateFunc = requireNonEmptyString
+	}
+	p := promptui.Prompt{
+		Label:    prompt.Prompt,
+		Default:  defaultValue,
+		Validate: validateFunc,
+		Stdin:    input,
+	}
+	return &p, nil
+}
+
+func PrepareChoices(prompt *Prompt, defaults map[string]interface{}, input io.ReadCloser) (*promptui.Select, error) {
+	var choices = prompt.Choices
+	if k, exists := defaults[prompt.Name]; exists {
+		var ok bool
+		choices, ok = k.([]string)
+		if !ok {
+			return nil, fmt.Errorf("prompt for %s contains invalid []string %v", prompt.Name, prompt.Default)
+		}
+	}
+	p := promptui.Select{
+		Label: prompt.Prompt,
+		Items: choices,
+		Stdin: input,
+	}
+	return &p, nil
+}
+
+func AskPrompts(prompts *Prompts, overrides map[string]string, defaults map[string]interface{}, input io.ReadCloser) (map[string]string, error) {
+	values := map[string]string{}
 	for _, prompt := range prompts.Prompts {
-		if overide, exists := overrides[prompt.Name]; exists {
-			vars[prompt.Name] = overide
+		if o, exists := overrides[prompt.Name]; exists {
+			values[prompt.Name] = o
 			continue
 		}
 
@@ -64,28 +104,23 @@ func AskPrompts(prompts *Prompts, vars map[string]interface{}, overrides map[str
 		var err error
 
 		if prompt.Choices == nil || len(prompt.Choices) == 0 {
-			var validateFunc promptui.ValidateFunc = requireId
-			if prompt.Required {
-				validateFunc = requireNonEmptyString
-			}
-			p := promptui.Prompt{
-				Label:    prompt.Prompt,
-				Default:  prompt.Default,
-				Validate: validateFunc,
+			p, prepErr := PreparePrompt(&prompt, defaults, input)
+			if prepErr != nil {
+				return nil, prepErr
 			}
 			result, err = p.Run()
 		} else {
-			p := promptui.Select{
-				Label: prompt.Prompt,
-				Items: prompt.Choices,
+			p, prepErr := PrepareChoices(&prompt, defaults, input)
+			if prepErr != nil {
+				return nil, prepErr
 			}
 			_, result, err = p.Run()
 		}
 		if err == nil {
-			vars[prompt.Name] = result
+			values[prompt.Name] = result
 		}
 	}
-	return nil
+	return values, nil
 }
 
 func ReadFile(bfs billy.Filesystem, name string) (string, error) {
@@ -160,7 +195,7 @@ func isPrefixOf(path string, prefixes []string) bool {
 	return false
 }
 
-func Apply(bfs billy.Filesystem, vars map[string]interface{}) (billy.Filesystem, error) {
+func Apply(bfs billy.Filesystem, vars map[string]string) (billy.Filesystem, error) {
 	outFs := memfs.New()
 
 	err := util.Walk(bfs, "/", func(path string, info fs.FileInfo, err error) error {
@@ -248,7 +283,7 @@ func Copy(inFs billy.Filesystem, outFs billy.Filesystem) error {
 	return err
 }
 
-func transform(env *map[string]interface{}, data string) ([]byte, error) {
+func transform(env *map[string]string, data string) ([]byte, error) {
 	var output bytes.Buffer
 	tpl, err := template.New("bp").Funcs(sprig.FuncMap()).Parse(data)
 	if err != nil {
