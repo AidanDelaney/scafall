@@ -102,15 +102,6 @@ func ReadFile(bfs billy.Filesystem, name string) (string, error) {
 	return string(buf), nil
 }
 
-func contains(strings []string, element string) bool {
-	for _, s := range strings {
-		if s == element {
-			return true
-		}
-	}
-	return false
-}
-
 func ReadPromptFile(bfs billy.Filesystem, name string) (*Prompts, error) {
 	promptData, err := ReadFile(bfs, name)
 	if err != nil {
@@ -123,7 +114,7 @@ func ReadPromptFile(bfs billy.Filesystem, name string) (*Prompts, error) {
 	}
 
 	for _, prompt := range prompts.Prompts {
-		if contains(ReservedPromptVariables, prompt.Name) {
+		if util.Contains(ReservedPromptVariables, prompt.Name) {
 			return nil, fmt.Errorf("%s file contains reserved variable: %s", name, prompt.Name)
 		}
 
@@ -152,7 +143,7 @@ func ReadOverrides(bfs billy.Filesystem, name string) (map[string]string, error)
 	}
 
 	for k, _ := range overrides {
-		if contains(ReservedPromptVariables, k) {
+		if util.Contains(ReservedPromptVariables, k) {
 			return nil, fmt.Errorf("%s file contains reserved variable: %s", name, k)
 		}
 	}

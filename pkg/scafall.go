@@ -1,3 +1,6 @@
+// Scafall creates new source projects from project templates.  Project
+// templates are stored in git repositories and new source projects are created
+// on your local filesystem.
 package scafall
 
 import (
@@ -14,11 +17,16 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
+// Scafall allows programmatic control over pre-populated Variables and control
+// over the variables that are allowed to be prompted.  Reserverd variables are
+// skipped in prompts.
 type Scafall struct {
 	Variables map[string]interface{}
 	Reserved  []string
 }
 
+// Create a New Scafall with the given pre-populated Variables and reserved
+// variables
 func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
 	return Scafall{
 		Variables: vars,
@@ -26,6 +34,7 @@ func New(vars map[string]interface{}, reservedPromptValues []string) Scafall {
 	}
 }
 
+// Present a local directory or a git repo as a Filesystem
 func urlToFs(url string) (billy.Filesystem, error) {
 	var inFs billy.Filesystem
 
@@ -81,7 +90,7 @@ func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt strin
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() {
+		if entry.IsDir() && entry.Name() != ".git" {
 			choices = append(choices, entry.Name())
 		}
 	}
@@ -112,6 +121,8 @@ func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt strin
 	return create(s, inFs, outputDir)
 }
 
+// ScaffoldCollection creates a project after prompting the end-user to choose
+// one of the projects in the collection at url.
 func (s Scafall) ScaffoldCollection(url string, prompt string, outputDir string) error {
 	inFs, err := urlToFs(url)
 	if err != nil {
@@ -120,6 +131,9 @@ func (s Scafall) ScaffoldCollection(url string, prompt string, outputDir string)
 	return collection(s, inFs, outputDir, prompt)
 }
 
+// Scaffold accepts url containing project templates and creates an output
+// project.  The url can either point to a project template or a collection of
+// project templates.
 func (s Scafall) Scaffold(url string, outputDir string) error {
 	inFs, err := urlToFs(url)
 	if err != nil {
