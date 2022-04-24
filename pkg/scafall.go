@@ -157,7 +157,6 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 		return fmt.Errorf("directory %s already exists", targetDir)
 	}
 
-	var transformedFs = bfs
 	var values map[string]string
 
 	// Create prompts and merge any overrides
@@ -181,14 +180,9 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 		mergo.Merge(&values, s.Overrides)
 	}
 
-	transformedFs, err := internal.Apply(bfs, values)
-	if err != nil {
-		return err
-	}
-
 	os.MkdirAll(targetDir, 0755)
 	outFs := osfs.New(targetDir)
-	err = internal.Copy(transformedFs, outFs)
+	err := internal.Apply(bfs, values, outFs)
 	if err != nil {
 		return fmt.Errorf("failed to load new project skeleton: %s", err)
 	}

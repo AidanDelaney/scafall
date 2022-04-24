@@ -78,7 +78,7 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			pwd, _ := os.Getwd()
 			outputProject := filepath.Join(outputDir, "test")
 
-			s := scafall.Scafall{Overrides: map[string]string{"duck": "quack"}}
+			s := scafall.Scafall{Overrides: map[string]string{"duck": "quack", "crow": "caw"}}
 			s.Scaffold(filepath.Join(pwd, "testdata/template_folder"), outputProject)
 
 			templateFile := filepath.Join(outputProject, "quack", "quack.go")
@@ -86,6 +86,12 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			h.AssertNil(t, err)
 			data, _ := ioutil.ReadFile(templateFile)
 			h.AssertContains(t, string(data), "QUACK")
+
+			templateBinary := filepath.Join(outputProject, "quack", "quack.jpg")
+			fi, err := os.Stat(templateBinary)
+			h.AssertNil(t, err)
+			h.AssertNotEq(t, 0, fi)
+
 		})
 
 		it.After(func() {

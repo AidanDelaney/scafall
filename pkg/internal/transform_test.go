@@ -122,7 +122,8 @@ func testApply(t *testing.T, when spec.G, it spec.S) {
 				"Foo": "Bar",
 			}
 
-			outFs, err := internal.Apply(bfs, vars)
+			outFs := memfs.New()
+			err = internal.Apply(bfs, vars, outFs)
 			h.AssertNil(t, err)
 
 			bar, err := outFs.Open("/Bar/Bar/Bar.txt")
