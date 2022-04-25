@@ -109,9 +109,11 @@ func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt strin
 	if err != nil {
 		return err
 	}
-	mergo.Merge(&s.Overrides, overrides)
+	mergedOverrides := make(map[string]string)
+	mergo.Merge(&mergedOverrides, s.Overrides)
+	mergo.Merge(&mergedOverrides, overrides)
 
-	values, err := internal.AskPrompts(&prompts, overrides, vars, os.Stdin)
+	values, err := internal.AskPrompts(&prompts, mergedOverrides, vars, os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -172,12 +174,14 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 				return err
 			}
 		}
-		mergo.Merge(&s.Overrides, overrides)
-		values, err = internal.AskPrompts(prompts, s.Overrides, s.DefaultValues, os.Stdin)
+		mergedOverrides := make(map[string]string)
+		mergo.Merge(&mergedOverrides, s.Overrides)
+		mergo.Merge(&mergedOverrides, overrides)
+		values, err = internal.AskPrompts(prompts, mergedOverrides, s.DefaultValues, os.Stdin)
 		if err != nil {
 			return err
 		}
-		mergo.Merge(&values, s.Overrides)
+		mergo.Merge(&values, mergedOverrides)
 	}
 
 	os.MkdirAll(targetDir, 0755)
