@@ -29,3 +29,7 @@ test-integration: test-clean
 
 test-system: test-clean
 	go test ./test_system/
+
+lint:
+	which go-acc || go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run

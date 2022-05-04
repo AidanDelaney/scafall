@@ -4,6 +4,7 @@
 package scafall
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -143,8 +144,14 @@ func collection(s Scafall, inFs billy.Filesystem, outputDir string, prompt strin
 		return err
 	}
 	mergedOverrides := make(map[string]string)
-	mergo.Merge(&mergedOverrides, s.Overrides)
-	mergo.Merge(&mergedOverrides, overrides)
+	err = mergo.Merge(&mergedOverrides, s.Overrides)
+	if err != nil {
+		return errors.New("internal error when merging overrides")
+	}
+	err = mergo.Merge(&mergedOverrides, overrides)
+	if err != nil {
+		return fmt.Errorf("internal error when merging overrides from %s", internal.OverrideFile)
+	}
 
 	values, err := internal.AskPrompts(prompts, mergedOverrides, vars, os.Stdin)
 	if err != nil {
@@ -203,13 +210,22 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 			}
 		}
 		mergedOverrides := make(map[string]string)
-		mergo.Merge(&mergedOverrides, s.Overrides)
-		mergo.Merge(&mergedOverrides, overrides)
+		err = mergo.Merge(&mergedOverrides, s.Overrides)
+		if err != nil {
+			return fmt.Errorf("internal error when merging overrides from %s", internal.OverrideFile)
+		}
+		err = mergo.Merge(&mergedOverrides, overrides)
+		if err != nil {
+			return fmt.Errorf("internal error when merging overrides from %s", internal.OverrideFile)
+		}
 		values, err = internal.AskPrompts(prompts, mergedOverrides, s.DefaultValues, os.Stdin)
 		if err != nil {
 			return err
 		}
-		mergo.Merge(&values, mergedOverrides)
+		err = mergo.Merge(&values, mergedOverrides)
+		if err != nil {
+			return fmt.Errorf("internal error when merging overrides with prompt values")
+		}
 	}
 
 	transformedFs := memfs.New()
@@ -218,7 +234,12 @@ func create(s Scafall, bfs billy.Filesystem, targetDir string) error {
 		return fmt.Errorf("failed to load new project skeleton: %s", errApply)
 	}
 
-	os.MkdirAll(targetDir, 0755)
+	if targetDir != "." {
+		err := os.MkdirAll(targetDir, 0755)
+		if err != nil {
+			return fmt.Errorf("can not create target directory %s", targetDir)
+		}
+	}
 	outFs := osfs.New(targetDir)
 	errCopy := internal.Copy(transformedFs, outFs)
 	if errCopy != nil {

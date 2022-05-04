@@ -176,7 +176,7 @@ func ReadOverrides(bfs billy.Filesystem, name string) (map[string]string, error)
 		return nil, fmt.Errorf("%s file does not match required format: %s", name, err)
 	}
 
-	for k, _ := range overrides {
+	for k := range overrides {
 		if util.Contains(ReservedPromptVariables, k) {
 			return nil, fmt.Errorf("%s file contains reserved variable: %s", name, k)
 		}
