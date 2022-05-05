@@ -1,5 +1,6 @@
 ## variables
 BIN_DIR := $(GOPATH)/bin
+GOCMD?=go
 GO_ACC := $(BIN_DIR)/go-acc@latest
 CODE_COVERAGE_FILE:= coverage
 CODE_COVERAGE_FILE_TXT := $(CODE_COVERAGE_FILE).txt
@@ -14,6 +15,10 @@ test: test-clean test-unit test-integration test-system
 test-clean:
 	@echo "	cleaning test cache"
 	go clean -testcache ./...
+
+install-golangci-lint:
+	@echo "> Installing golangci-lint..."
+	cd tools && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 $(GO_ACC):
 	@echo "	installing testing tools"
@@ -30,6 +35,5 @@ test-integration: test-clean
 test-system: test-clean
 	go test ./test_system/
 
-lint:
-	which go-acc || go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+lint: install-golangci-lint
 	golangci-lint run

@@ -48,12 +48,12 @@ func requireNonEmptyString(s string) error {
 	return nil
 }
 
-func requireId(s string) error {
+func requireID(s string) error {
 	return nil
 }
 
 func PreparePrompt(prompt Prompt, defaults map[string]interface{}, input io.ReadCloser) (promptui.Prompt, error) {
-	var validateFunc promptui.ValidateFunc = requireId
+	var validateFunc promptui.ValidateFunc = requireID
 	var defaultValue = prompt.Default
 	if k, exists := defaults[prompt.Name]; exists {
 		var ok bool

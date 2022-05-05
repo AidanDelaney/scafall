@@ -47,7 +47,6 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 				h.AssertEq(t, fi.Mode()&01000, info.Mode()&01000)
 				return nil
 			})
-
 		})
 
 		it.After(func() {

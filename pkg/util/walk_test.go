@@ -34,7 +34,7 @@ func testWalk(t *testing.T, when spec.G, it spec.S) {
 
 	when("A directory tree is walked", func() {
 		it("finds all files and directories", func() {
-			var found []string = []string{}
+			var found = []string{}
 			u.Walk(bfs, "/", func(path string, info fs.FileInfo, err error) error {
 				found = append(found, path)
 				return nil

@@ -110,7 +110,7 @@ func testReadPrompt(t *testing.T, when spec.G, it spec.S) {
 
 func testApply(t *testing.T, when spec.G, it spec.S) {
 	when("Applying to a filesystem", func() {
-		it("correctlyy replaces strings in a filessytem", func() {
+		it("correctly replaces strings in a filesytem", func() {
 			var bfs = memfs.New()
 			err := bfs.MkdirAll("/{{.Foo}}/{{.Foo}}", 0766)
 			h.AssertNil(t, err)

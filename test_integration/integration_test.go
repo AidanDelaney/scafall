@@ -93,7 +93,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			fi, err := os.Stat(templateBinary)
 			h.AssertNil(t, err)
 			h.AssertNotEq(t, 0, fi)
-
 		})
 
 		it.After(func() {

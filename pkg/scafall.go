@@ -28,28 +28,28 @@ type Scafall struct {
 	OutputFolder  string
 }
 
-type ScafallOption func(*Scafall)
+type Option func(*Scafall)
 
-func WithOutputFolder(folder string) ScafallOption {
+func WithOutputFolder(folder string) Option {
 	return func(s *Scafall) {
 		s.OutputFolder = folder
 	}
 }
 
-func WithOverrides(overrides map[string]string) ScafallOption {
+func WithOverrides(overrides map[string]string) Option {
 	return func(s *Scafall) {
 		s.Overrides = overrides
 	}
 }
 
-func WithDefaultValues(defaults map[string]interface{}) ScafallOption {
+func WithDefaultValues(defaults map[string]interface{}) Option {
 	return func(s *Scafall) {
 		s.DefaultValues = defaults
 	}
 }
 
 // Create a new Scafall with the given options.
-func NewScafall(opts ...ScafallOption) Scafall {
+func NewScafall(opts ...Option) Scafall {
 	var (
 		defaultOverrides     = map[string]string{}
 		defautlDefaultValues = map[string]interface{}{}
