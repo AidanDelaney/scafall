@@ -10,13 +10,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AidanDelaney/scafall/pkg/util"
-	"github.com/gabriel-vasile/mimetype"
-
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-git/go-billy/v5"
 	"github.com/manifoldco/promptui"
+
+	"github.com/AidanDelaney/scafall/pkg/util"
 )
 
 const (

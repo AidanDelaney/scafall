@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/AidanDelaney/scafall/pkg/internal"
 	h "github.com/buildpacks/pack/testhelpers"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/sclevine/spec"
+
+	"github.com/AidanDelaney/scafall/pkg/internal"
 )
 
 type ClosingBuffer struct {

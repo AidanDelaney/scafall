@@ -7,12 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	scafall "github.com/AidanDelaney/scafall/pkg"
-	util "github.com/AidanDelaney/scafall/pkg/util"
 	h "github.com/buildpacks/pack/testhelpers"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/sclevine/spec"
+
+	scafall "github.com/AidanDelaney/scafall/pkg"
+	util "github.com/AidanDelaney/scafall/pkg/util"
 )
 
 func testSystem(t *testing.T, when spec.G, it spec.S) {

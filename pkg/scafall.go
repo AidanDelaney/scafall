@@ -9,14 +9,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AidanDelaney/scafall/pkg/internal"
-	"github.com/imdario/mergo"
-
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/imdario/mergo"
+
+	"github.com/AidanDelaney/scafall/pkg/internal"
 )
 
 // Scafall allows programmatic control over the default values for variables

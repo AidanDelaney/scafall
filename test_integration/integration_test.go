@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	scafall "github.com/AidanDelaney/scafall/pkg"
 	h "github.com/buildpacks/pack/testhelpers"
 	"github.com/sclevine/spec"
+
+	scafall "github.com/AidanDelaney/scafall/pkg"
 )
 
 func testIntegration(t *testing.T, when spec.G, it spec.S) {
