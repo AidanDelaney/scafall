@@ -203,7 +203,9 @@ func Apply(inputDir string, vars collections.IDictionary, outputDir string) erro
 		return fmt.Errorf("failed to find files in input folder: %s %s", inputDir, err)
 	}
 
-	opts := t.DefaultOptions().Set(t.Overwrite, t.Sprig, t.StrictErrorCheck)
+	opts := t.DefaultOptions().
+		Set(t.Overwrite, t.Sprig, t.StrictErrorCheck).
+		Unset(t.Razor)
 	template, err := t.NewTemplate(
 		transformedDir,
 		vars,
@@ -232,18 +234,19 @@ func Apply(inputDir string, vars collections.IDictionary, outputDir string) erro
 		}
 	}
 
-	err = cp.Copy(transformedDir, outputDir)
+	absoluteFilepaths, err := findTextFiles(transformedDir)
+	if err != nil {
+		return err
+	}
+	_, err = template.ProcessTemplates(transformedDir, transformedDir, absoluteFilepaths...)
 	if err != nil {
 		return err
 	}
 
-	absoluteFilepaths, err := findTextFiles(outputDir)
-	if err != nil {
-		return err
-	}
-	_, err = template.ProcessTemplates(transformedDir, outputDir, absoluteFilepaths...)
+	err = cp.Copy(transformedDir, outputDir)
 	if err != nil {
 		os.RemoveAll(outputDir)
+		return err
 	}
 	return err
 }
@@ -263,7 +266,7 @@ func replace(env collections.IDictionary, data string) (string, error) {
 
 func findFiles(dir string) ([]string, error) {
 	files := []string{}
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(dir, func(path string, info os.DirEntry, err error) error {
 		if info.IsDir() && util.Contains(IgnoredDirectories, info.Name()) {
 			return filepath.SkipDir
 		}
@@ -292,7 +295,7 @@ func isTextfile(path string) bool {
 
 func findTextFiles(dir string) ([]string, error) {
 	files := []string{}
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(dir, func(path string, info os.DirEntry, err error) error {
 		if !info.IsDir() {
 			if isTextfile(path) && !util.Contains(IgnoredNames, info.Name()) {
 				files = append(files, path)

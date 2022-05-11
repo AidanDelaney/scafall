@@ -146,4 +146,44 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 			os.RemoveAll(outputDir)
 		})
 	})
+
+	when("top level command is executed", func() {
+		var (
+			expected  = memfs.New()
+			outputDir string
+		)
+
+		it.Before(func() {
+			expected.MkdirAll("quack", 0755)
+			expected.OpenFile("quack/print_pi.py", os.O_CREATE, 0744)
+
+			outputDir, _ = ioutil.TempDir("", "test")
+		})
+
+		it("scaffolds a project from a URLls ", func() {
+			url := "http://github.com/AidanDelaney/scafall-python-eg.git"
+			overrides := map[string]string{
+				"ProjectName":   "quack",
+				"PythonVersion": "python3.10",
+				"NumDigits":     "42",
+			}
+
+			s := scafall.NewScafall(scafall.WithOutputFolder(outputDir), scafall.WithOverrides(overrides))
+			err := s.Scaffold(url)
+			h.AssertNil(t, err)
+
+			bfs := osfs.New(outputDir)
+			walkFs(expected, "/", func(path string, info fs.FileInfo, err error) error {
+				fi, e := bfs.Stat(path)
+				h.AssertNil(t, e)
+
+				h.AssertEq(t, fi.Mode()&01000, info.Mode()&01000)
+				return nil
+			})
+		})
+
+		it.After(func() {
+			os.RemoveAll(outputDir)
+		})
+	})
 }
