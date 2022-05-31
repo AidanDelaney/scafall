@@ -198,7 +198,7 @@ func ReadOverrides(overrideFile string) (collections.IDictionary, error) {
 func Apply(inputDir string, vars collections.IDictionary, outputDir string) error {
 	transformedDir, _ := ioutil.TempDir("", "scafall")
 	defer os.RemoveAll(transformedDir)
-	files, err := findFiles(inputDir)
+	files, err := findTransformableFiles(inputDir)
 	if err != nil {
 		return fmt.Errorf("failed to find files in input folder: %s %s", inputDir, err)
 	}
@@ -264,7 +264,7 @@ func replace(env collections.IDictionary, data string) (string, error) {
 	return output.String(), err
 }
 
-func findFiles(dir string) ([]string, error) {
+func findTransformableFiles(dir string) ([]string, error) {
 	files := []string{}
 	err := filepath.WalkDir(dir, func(path string, info os.DirEntry, err error) error {
 		if info.IsDir() && util.Contains(IgnoredDirectories, info.Name()) {
@@ -272,6 +272,12 @@ func findFiles(dir string) ([]string, error) {
 		}
 
 		if !info.IsDir() {
+			// Ignore all prompts.toml files and any top-level README.md
+			rootReadme := filepath.Join(dir, "README")
+			if util.Contains(IgnoredNames, info.Name()) || strings.HasPrefix(path, rootReadme) {
+				return nil
+			}
+
 			files = append(files, path)
 		}
 		return nil
