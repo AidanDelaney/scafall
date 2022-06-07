@@ -140,6 +140,9 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 
 			fileData, _ := ioutil.ReadFile(filepath.Join(outputDir, "two.go"))
 			h.AssertContains(t, string(fileData), "test")
+
+			_, err = os.Stat(filepath.Join(outputDir, "examples/foo/foo.txt"))
+			h.AssertNil(t, err)
 		})
 
 		it.After(func() {
@@ -160,7 +163,7 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 			outputDir, _ = ioutil.TempDir("", "test")
 		})
 
-		it("scaffolds a project from a URLls ", func() {
+		it("scaffolds a project from a URL ", func() {
 			url := "http://github.com/AidanDelaney/scafall-python-eg.git"
 			overrides := map[string]string{
 				"ProjectName":   "quack",
