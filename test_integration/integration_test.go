@@ -17,14 +17,13 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 	type TestCase struct {
 		title         string
 		folder        []string
-		defaults      map[string]interface{}
 		promptAnswers []string
 	}
 	testCases := []TestCase{
-		{"Test no prompt file", []string{"testdata", "empty"}, map[string]interface{}{}, []string{}},
-		{"Test empty prompt file", []string{"testdata", "noprompts"}, map[string]interface{}{}, []string{}},
-		{"Test string prompts", []string{"testdata", "str_prompts"}, map[string]interface{}{}, []string{"test"}},
-		{"Test required prompts", []string{"testdata", "requireprompts"}, map[string]interface{}{}, []string{"test"}},
+		{"Test no prompt file", []string{"testdata", "empty"}, []string{}},
+		{"Test empty prompt file", []string{"testdata", "noprompts"}, []string{}},
+		{"Test string prompts", []string{"testdata", "str_prompts"}, []string{"test"}},
+		{"Test required prompts", []string{"testdata", "requireprompts"}, []string{"test"}},
 	}
 
 	for _, testCase := range testCases {
@@ -46,7 +45,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 				}
 
 				s := scafall.NewScafall(
-					scafall.WithDefaultValues(currentCase.defaults),
 					scafall.WithOutputFolder(outputDir),
 				)
 				sErr := s.Scaffold(inputTemplate)
@@ -117,24 +115,6 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 			templateFile := filepath.Join(outputDir, "template.go")
 			_, err = os.Stat(templateFile)
 			h.AssertNotNil(t, err)
-		})
-	})
-
-	when("A collection is requested", func() {
-		it("Allows a choice to be made", func() {
-			collection := "testdata/collection"
-			outputDir, _ := ioutil.TempDir("", "test")
-
-			s := scafall.NewScafall(scafall.WithOutputFolder(outputDir))
-			err := s.ScaffoldCollection(collection, "Choose your option")
-			h.AssertNil(t, err)
-
-			templateFile := filepath.Join(outputDir, "template.go")
-			_, err = os.Stat(templateFile)
-			h.AssertNil(t, err)
-			data, _ := ioutil.ReadFile(templateFile)
-
-			h.AssertContains(t, string(data), "test")
 		})
 	})
 }

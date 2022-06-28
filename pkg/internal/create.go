@@ -30,7 +30,7 @@ func URLToFs(url string, tmpDir string) (string, error) {
 	return tmpDir, nil
 }
 
-func Create(inputDir string, overrides map[string]string, defaultValues map[string]interface{}, targetDir string) error {
+func Create(inputDir string, overrides map[string]string, targetDir string) error {
 	var values collections.IDictionary
 	promptFile := filepath.Join(inputDir, PromptFile)
 
@@ -50,7 +50,7 @@ func Create(inputDir string, overrides map[string]string, defaultValues map[stri
 			}
 		}
 
-		values, err = AskPrompts(prompts, overridesDict, defaultValues, os.Stdin)
+		values, err = AskPrompts(prompts, overridesDict, os.Stdin)
 		if err != nil {
 			return err
 		}

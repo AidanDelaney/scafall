@@ -91,34 +91,6 @@ from math import pi
 print("%.3f" % pi)
 ```
 
-## Template Collections
-
-Unlike a template project a template collection must not contain a `prompts.toml` at the root project directory.  Any top-level `prompts.toml` will be silently ignored.  Instead, a template collection is a git repository that contains multiple template projects.
-
-Given a template collection, the end-user is prompted to choose to create a project from one of the project templates.
-
-```bash
-$ tree .
-├── go
-│   ├── prompts.toml
-│   └── {{.ProjectName}}
-│       └── main.go
-└── python
-    ├── prompts.toml
-    └── {{.ProjectName}}
-        └── print_pi.py
-```
-
-Running `scafall` produces a default prompt to choose between project templates.  Project template specific prompts follow in end-user prompts.
-
-```bash
-$ scafall http://github.com/AidanDelaney/scafall-collection-eg/
-Use the arrow keys to navigate: ↓ ↑ → ←
-? Choose a project template:
-  ▸ go
-    python
-```
-
 ## Prompts.toml Format
 
 The `prompts.toml` file is a sequence of `[[prompt]]` which must each deine a `name` and `prompt`.  A minimal example is
