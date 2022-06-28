@@ -21,7 +21,7 @@ var (
 
 			s := scafall.NewScafall()
 			outputDir, err := cmd.Flags().GetString(outputFolderFlag)
-			if err != nil {
+			if err == nil {
 				scafall.WithOutputFolder(outputDir)(&s)
 			}
 
