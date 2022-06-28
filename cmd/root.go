@@ -8,6 +8,7 @@ import (
 
 const (
 	outputFolderFlag = "output-folder"
+	overrideFlag     = "override"
 )
 
 var (
@@ -24,6 +25,10 @@ var (
 			if err == nil {
 				scafall.WithOutputFolder(outputDir)(&s)
 			}
+			overrides, err := cmd.Flags().GetStringToString(overrideFlag)
+			if err == nil {
+				scafall.WithOverrides(overrides)(&s)
+			}
 
 			return s.Scaffold(url)
 		},
@@ -32,6 +37,7 @@ var (
 
 func init() {
 	rootCmd.Flags().String(outputFolderFlag, ".", "scaffold project in the provided output directory")
+	rootCmd.Flags().StringToStringP(overrideFlag, "o", map[string]string{}, "provide overrides as key-value pairs")
 }
 
 // Execute executes the root command.
