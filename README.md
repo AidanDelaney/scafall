@@ -51,13 +51,11 @@ func main() {
 }
 ```
 
-### Of `Overrides` and `DefaultValues`
+### Of `Overrides`
 
 When using `scafall` programmatically you may want to provide some constant values.  In `scafall` these are termed _overrides_.  An override may define `map[string]string{"PI": "3.14"}` any prompting for an alternative value to `PI` is skipped and the `3.14` values is used in templates.  This is particularly useful where the calling code calculates a value, such as a username, and does not want the end-user to be prompted to chage this value.
 
 In all cases, overrides _can_ be provided in a `.override.toml` file.  The `.override.toml` file is intended to simplify testing and therefore the format is an implementation detail.  Because the format is an implementation detail, we do not document it here.
-
-`DefaultValues` are useful where the calling code provides a sane default for the end-user.  For example, a template project may prompt the user to input a `http_proxy`, the default of which can be calculated in a calling application.  The `DefaultValues` feature is motivated by the need for a calling application to provide a range of choices to the end-user, without specifying a constant value as an override.
 
 ## Project Templates
 
@@ -90,6 +88,8 @@ from math import pi
 
 print("%.3f" % pi)
 ```
+
+A project template containing a `prompts.toml` file will produce a generated project that omits the `prompts.toml` file.  In addition, any root-level `README.md` file in the project template is not propagated to the generated project.  This allows the project template to contain a `README.md` to explain usage of the project template.
 
 ## Prompts.toml Format
 
