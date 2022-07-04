@@ -103,6 +103,34 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 		})
 	})
 
+	when("A subPath is requested", func() {
+		var (
+			outputDir string
+		)
+
+		it.Before(func() {
+			outputDir, _ = ioutil.TempDir("", "test")
+		})
+
+		it("creates a project from a subPath", func() {
+			s := scafall.NewScafall(
+				scafall.WithOutputFolder(outputDir),
+				scafall.WithSubPath("two"),
+			)
+			s.Scaffold("testdata/collection")
+
+			templateFile := filepath.Join(outputDir, "template.go")
+			_, err := os.Stat(templateFile)
+			h.AssertNil(t, err)
+			data, _ := ioutil.ReadFile(templateFile)
+			h.AssertContains(t, string(data), "this is not a test")
+		})
+
+		it.After(func() {
+			os.RemoveAll(outputDir)
+		})
+	})
+
 	when("An invalid template is passed", func() {
 		it("does not output a project", func() {
 			brokenTemplate := "testdata/broken"

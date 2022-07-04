@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/coveooss/gotemplate/v3/collections"
@@ -13,7 +14,7 @@ import (
 )
 
 // Present a local directory or a git repo as a Filesystem
-func URLToFs(url string, tmpDir string) (string, error) {
+func URLToFs(url string, subPath string, tmpDir string) (string, error) {
 	// if the URL is a local folder, then do not git clone it
 	if _, err := os.Stat(url); err == nil {
 		cp.Copy(url, tmpDir)
@@ -27,7 +28,11 @@ func URLToFs(url string, tmpDir string) (string, error) {
 		}
 	}
 
-	return tmpDir, nil
+	requestedSubPath := path.Join(tmpDir, subPath)
+	if _, err := os.Stat(requestedSubPath); err != nil {
+		return "", fmt.Errorf("reequested subPath of template does not exist: %s", subPath)
+	}
+	return requestedSubPath, nil
 }
 
 func Create(inputDir string, overrides map[string]string, targetDir string) error {

@@ -16,6 +16,7 @@ import (
 type Scafall struct {
 	Overrides    map[string]string
 	OutputFolder string
+	SubPath      string
 }
 
 type Option func(*Scafall)
@@ -29,6 +30,12 @@ func WithOutputFolder(folder string) Option {
 func WithOverrides(overrides map[string]string) Option {
 	return func(s *Scafall) {
 		s.Overrides = overrides
+	}
+}
+
+func WithSubPath(subPath string) Option {
+	return func(s *Scafall) {
+		s.SubPath = subPath
 	}
 }
 
@@ -58,10 +65,12 @@ func (s Scafall) Scaffold(url string) error {
 	tmpDir, _ := ioutil.TempDir("", "scafall")
 	defer os.RemoveAll(tmpDir)
 
-	inFs, err := internal.URLToFs(url, tmpDir)
+	var inFs *string
+	fs, err := internal.URLToFs(url, s.SubPath, tmpDir)
 	if err != nil {
 		return err
 	}
+	inFs = &fs
 
-	return internal.Create(inFs, s.Overrides, s.OutputFolder)
+	return internal.Create(*inFs, s.Overrides, s.OutputFolder)
 }
