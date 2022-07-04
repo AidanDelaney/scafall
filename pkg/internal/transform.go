@@ -82,6 +82,16 @@ func PrepareChoices(prompt Prompt, input io.ReadCloser) (promptui.Select, error)
 	return p, nil
 }
 
+func AskQuestion(question string, choices []string, input io.ReadCloser) (string, error) {
+	prompt := promptui.Select{
+		Label: question,
+		Items: choices,
+		Stdin: input,
+	}
+	_, result, err := prompt.Run()
+	return result, err
+}
+
 func AskPrompts(prompts Prompts, overrides collections.IDictionary, input io.ReadCloser) (collections.IDictionary, error) {
 	if overrides == nil {
 		overrides = collections.CreateDictionary()

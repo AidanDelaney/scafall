@@ -6,6 +6,7 @@ package scafall
 import (
 	"io/ioutil"
 	"os"
+	"path"
 
 	"github.com/AidanDelaney/scafall/pkg/internal"
 )
@@ -71,6 +72,15 @@ func (s Scafall) Scaffold(url string) error {
 		return err
 	}
 	inFs = &fs
+
+	if isCollection, choices := internal.IsCollection(*inFs); isCollection {
+		template, err := internal.AskQuestion("choose a project template", choices, os.Stdin)
+		if err != nil {
+			return err
+		}
+		fs = path.Join(fs, template)
+		inFs = &fs
+	}
 
 	return internal.Create(*inFs, s.Overrides, s.OutputFolder)
 }
