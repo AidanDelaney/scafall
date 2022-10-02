@@ -207,7 +207,8 @@ func Apply(inputDir string, vars collections.IDictionary, outputDir string) erro
 
 		outputPath := filepath.Join(outputDir, outputFile.FilePath)
 		if outputFile.FileContent == "" {
-			mvErr := os.Rename(file.FilePath, outputPath)
+			inputPath := filepath.Join(inputDir, file.FilePath)
+			mvErr := os.Rename(inputPath, outputPath)
 			if mvErr != nil {
 				return fmt.Errorf("failed to rename %s to %s", file.FilePath, outputFile.FilePath)
 			}
@@ -233,7 +234,7 @@ func findTransformableFiles(dir string) ([]SourceFile, error) {
 				return nil
 			}
 
-			relPath := strings.TrimPrefix(path, dir)
+			relPath := strings.TrimPrefix(path, dir+"/")
 			if isTextfile(path) {
 				fileContent, err := ReadFile(path)
 				if err != nil {
