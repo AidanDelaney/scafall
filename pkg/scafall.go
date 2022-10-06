@@ -4,9 +4,11 @@
 package scafall
 
 import (
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/AidanDelaney/scafall/pkg/internal"
 )
@@ -15,9 +17,11 @@ import (
 // Overrides are skipped in prompts but can be locally overridden in a
 // `.override.toml` file.
 type Scafall struct {
+	URL          string
 	Overrides    map[string]string
 	OutputFolder string
 	SubPath      string
+	TmpDir       string
 }
 
 type Option func(*Scafall)
@@ -40,14 +44,21 @@ func WithSubPath(subPath string) Option {
 	}
 }
 
+func WithTmpDir(tmpDir string) Option {
+	return func(s *Scafall) {
+		s.TmpDir = tmpDir
+	}
+}
+
 // Create a new Scafall with the given options.
-func NewScafall(opts ...Option) Scafall {
+func NewScafall(url string, opts ...Option) (Scafall, error) {
 	var (
 		defaultOverrides    = map[string]string{}
 		defaultOutputFolder = "."
 	)
 
 	s := Scafall{
+		URL:          url,
 		Overrides:    defaultOverrides,
 		OutputFolder: defaultOutputFolder,
 	}
@@ -56,31 +67,69 @@ func NewScafall(opts ...Option) Scafall {
 		opt(&s)
 	}
 
-	return s
+	if s.TmpDir == "" {
+		tmpDir, err := os.MkdirTemp("", "scafall")
+		if err != nil {
+			return Scafall{}, err
+		}
+		s.TmpDir = tmpDir
+	}
+
+	return s, nil
+}
+
+func clone(s Scafall) (string, error) {
+	fs, err := internal.URLToFs(s.URL, s.SubPath, s.TmpDir)
+	if err != nil {
+		return "", err
+	}
+	return fs, err
 }
 
 // Scaffold accepts url containing project templates and creates an output
 // project.  The url can either point to a project template or a collection of
 // project templates.
-func (s Scafall) Scaffold(url string) error {
-	tmpDir, _ := ioutil.TempDir("", "scafall")
-	defer os.RemoveAll(tmpDir)
-
-	var inFs *string
-	fs, err := internal.URLToFs(url, s.SubPath, tmpDir)
+func (s Scafall) Scaffold() error {
+	inFs, err := clone(s)
 	if err != nil {
 		return err
 	}
-	inFs = &fs
 
-	if isCollection, choices := internal.IsCollection(*inFs); isCollection {
+	if isCollection, choices := internal.IsCollection(inFs); isCollection {
 		template, err := internal.AskQuestion("choose a project template", choices, os.Stdin)
 		if err != nil {
 			return err
 		}
-		fs = path.Join(fs, template)
-		inFs = &fs
+		inFs = path.Join(inFs, template)
 	}
 
-	return internal.Create(*inFs, s.Overrides, s.OutputFolder)
+	return internal.Create(inFs, s.Overrides, s.OutputFolder)
+}
+
+// Arguments returns the
+func (s Scafall) Arguments() (string, []string, error) {
+	inFs, err := clone(s)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if isCollection, choices := internal.IsCollection(inFs); isCollection {
+		return "templates available in collection", choices, nil
+	}
+
+	promptFile := filepath.Join(inFs, internal.PromptFile)
+	ps, err := internal.ReadPromptFile(promptFile)
+	if err != nil {
+		return "could not detect valid prompts", nil, err
+	}
+	argsStrings := make([]string, len(ps.Prompts))
+	for i, p := range ps.Prompts {
+		if len(p.Choices) == 0 {
+			argsStrings[i] = fmt.Sprintf("%s (default: %s)", p.Name, p.Default)
+		} else {
+			cString := strings.Join(p.Choices, ", ")
+			argsStrings[i] = fmt.Sprintf("%s=%s (default: %s)", p.Name, cString, p.Choices[0])
+		}
+	}
+	return "arguments offered by template", argsStrings, nil
 }
