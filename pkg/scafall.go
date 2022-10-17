@@ -18,7 +18,7 @@ import (
 // `.override.toml` file.
 type Scafall struct {
 	URL          string
-	Overrides    map[string]string
+	Arguments    map[string]string
 	OutputFolder string
 	SubPath      string
 	TmpDir       string
@@ -32,9 +32,9 @@ func WithOutputFolder(folder string) Option {
 	}
 }
 
-func WithOverrides(overrides map[string]string) Option {
+func WithArguments(arguments map[string]string) Option {
 	return func(s *Scafall) {
-		s.Overrides = overrides
+		s.Arguments = arguments
 	}
 }
 
@@ -53,13 +53,13 @@ func WithTmpDir(tmpDir string) Option {
 // Create a new Scafall with the given options.
 func NewScafall(url string, opts ...Option) (Scafall, error) {
 	var (
-		defaultOverrides    = map[string]string{}
+		defaultArguments    = map[string]string{}
 		defaultOutputFolder = "."
 	)
 
 	s := Scafall{
 		URL:          url,
-		Overrides:    defaultOverrides,
+		Arguments:    defaultArguments,
 		OutputFolder: defaultOutputFolder,
 	}
 
@@ -103,11 +103,11 @@ func (s Scafall) Scaffold() error {
 		inFs = path.Join(inFs, template)
 	}
 
-	return internal.Create(inFs, s.Overrides, s.OutputFolder)
+	return internal.Create(inFs, s.Arguments, s.OutputFolder)
 }
 
-// Arguments returns the
-func (s Scafall) Arguments() (string, []string, error) {
+// Arguments returns a list of variable names that can be passed to the template
+func (s Scafall) TemplateArguments() (string, []string, error) {
 	inFs, err := clone(s)
 	if err != nil {
 		return "", nil, err

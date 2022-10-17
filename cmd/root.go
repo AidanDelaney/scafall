@@ -31,7 +31,7 @@ var (
 			}
 			overridesVal, err := cmd.Flags().GetStringToString(overrideFlag)
 			if err == nil {
-				scafall.WithOverrides(overridesVal)(&s)
+				scafall.WithArguments(overridesVal)(&s)
 			}
 			subPathVal, err := cmd.Flags().GetString(subPath)
 			if err == nil {

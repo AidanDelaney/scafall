@@ -138,7 +138,7 @@ func testSystem(t *testing.T, when spec.G, it spec.S) {
 				"NumDigits":     "42",
 			}
 
-			s, _ := scafall.NewScafall(url, scafall.WithOutputFolder(outputDir), scafall.WithOverrides(overrides))
+			s, _ := scafall.NewScafall(url, scafall.WithOutputFolder(outputDir), scafall.WithArguments(overrides))
 			err := s.Scaffold()
 			h.AssertNil(t, err)
 
@@ -172,7 +172,7 @@ func testArgs(t *testing.T, when spec.G, it spec.S) {
 			url := "http://github.com/AidanDelaney/scafall-python-eg.git"
 
 			s, _ := scafall.NewScafall(url, scafall.WithOutputFolder(outputDir))
-			_, args, err := s.Arguments()
+			_, args, err := s.TemplateArguments()
 			h.AssertNil(t, err)
 
 			h.AssertEq(t, args, []string{
@@ -186,7 +186,7 @@ func testArgs(t *testing.T, when spec.G, it spec.S) {
 			url := "https://github.com/AidanDelaney/cnb-buildpack-templates"
 
 			s, _ := scafall.NewScafall(url, scafall.WithOutputFolder(outputDir))
-			_, args, err := s.Arguments()
+			_, args, err := s.TemplateArguments()
 			h.AssertNil(t, err)
 
 			h.AssertEq(t, args, []string{"Go", "bash"})

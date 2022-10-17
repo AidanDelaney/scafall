@@ -80,7 +80,7 @@ func testIntegration(t *testing.T, when spec.G, it spec.S) {
 		it("renames a templated folder and file", func() {
 			s, _ := scafall.NewScafall(
 				"testdata/template_folder",
-				scafall.WithOverrides(map[string]string{"duck": "quack", "crow": "caw"}),
+				scafall.WithArguments(map[string]string{"duck": "quack", "crow": "caw"}),
 				scafall.WithOutputFolder(outputDir),
 			)
 			s.Scaffold()
