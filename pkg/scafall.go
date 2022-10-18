@@ -13,40 +13,37 @@ import (
 	"github.com/AidanDelaney/scafall/pkg/internal"
 )
 
-// Scafall allows programmatic control over the default values for variables
-// Overrides are skipped in prompts but can be locally overridden in a
-// `.override.toml` file.
+// Scafall allows programmatic control over the default values for variables.
+// Any provided Arguments cause prompts for the same variable name to be skipped.
 type Scafall struct {
 	URL          string
 	Arguments    map[string]string
 	OutputFolder string
 	SubPath      string
-	TmpDir       string
+	tmpDir       string
+	cloned       string
 }
 
 type Option func(*Scafall)
 
+// Set the output folder in which to create scaffold a template.
 func WithOutputFolder(folder string) Option {
 	return func(s *Scafall) {
 		s.OutputFolder = folder
 	}
 }
 
+// Set values for each variable as key-value pairs.
 func WithArguments(arguments map[string]string) Option {
 	return func(s *Scafall) {
 		s.Arguments = arguments
 	}
 }
 
+// Use a sub folder within the template repository as the source for a template.
 func WithSubPath(subPath string) Option {
 	return func(s *Scafall) {
 		s.SubPath = subPath
-	}
-}
-
-func WithTmpDir(tmpDir string) Option {
-	return func(s *Scafall) {
-		s.TmpDir = tmpDir
 	}
 }
 
@@ -67,22 +64,26 @@ func NewScafall(url string, opts ...Option) (Scafall, error) {
 		opt(&s)
 	}
 
-	if s.TmpDir == "" {
+	if s.tmpDir == "" {
 		tmpDir, err := os.MkdirTemp("", "scafall")
 		if err != nil {
 			return Scafall{}, err
 		}
-		s.TmpDir = tmpDir
+		s.tmpDir = tmpDir
 	}
 
 	return s, nil
 }
 
 func clone(s Scafall) (string, error) {
-	fs, err := internal.URLToFs(s.URL, s.SubPath, s.TmpDir)
+	if s.cloned != "" {
+		return s.cloned, nil
+	}
+	fs, err := internal.URLToFs(s.URL, s.SubPath, s.tmpDir)
 	if err != nil {
 		return "", err
 	}
+	s.cloned = fs
 	return fs, err
 }
 
